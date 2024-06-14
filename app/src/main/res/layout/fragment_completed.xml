@@ -6,23 +6,20 @@
     android:background="@color/white"
     tools:context=".ToDoFragment">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/info"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/workspace"
-        android:orientation="vertical">
+        android:text="There is nothing to see here. Complete a Task."
+        android:gravity="center"
+        android:visibility="visible"/>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="There is nothing to see here. Add a task."
-            android:gravity="center"
-            android:visibility="visible"/>
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/list"
+        android:padding="5dp"
+        android:visibility="invisible"/>
 
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/list"/>
 
-    </LinearLayout>
 </RelativeLayout>

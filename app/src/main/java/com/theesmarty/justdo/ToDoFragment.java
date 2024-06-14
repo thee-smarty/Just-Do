@@ -11,58 +11,54 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class ToDoFragment extends Fragment {
 
     private ArrayList<String> tasks;
     private ArrayAdapter<String> adapter;
-    private FirebaseFirestore firestoreFirebase;
     private CollectionReference tasksRef;
     private CollectionReference completedRef;
-    private String userId;
     private TextView infoView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         tasks = new ArrayList<>();
-        firestoreFirebase = FirebaseFirestore.getInstance();
+        FirebaseFirestore firestoreFirebase = FirebaseFirestore.getInstance();
 
-        // Get current user ID
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            userId = user.getUid();
+            String userId = user.getUid();
             tasksRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-todo");
             completedRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-completed");
             fetchTasksFromFirestore();
         } else {
-            // Handle user not logged in
+            Toast.makeText(getActivity(), "User Error", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_to_do, container, false);
+        View view = inflater.inflate(R.layout.fragment_todo, container, false);
 
         ListView listView = view.findViewById(R.id.list);
         Button addButton = view.findViewById(R.id.add);
@@ -80,6 +76,12 @@ public class ToDoFragment extends Fragment {
                         String task = tasks.get(position);
                         moveTaskToCompleted(task);
                     }
+                });
+
+                itemView.setOnLongClickListener(v -> {
+                    String task = tasks.get(position);
+                    showDeleteTaskDialog(task);
+                    return true;
                 });
 
                 return itemView;
@@ -125,13 +127,17 @@ public class ToDoFragment extends Fragment {
 
     private void addTaskToFirestore(String task) {
         String taskId = generateUniqueId();
-        tasksRef.document(taskId).set(new Task(taskId, task)).addOnCompleteListener(task1 -> {
+        Map<String, Object> taskData = new HashMap<>();
+        taskData.put("id", taskId);
+        taskData.put("task", task);
+
+        tasksRef.document(taskId).set(taskData).addOnCompleteListener(task1 -> {
             if (task1.isSuccessful()) {
                 tasks.add(task);
                 adapter.notifyDataSetChanged();
                 updateInfoVisibility();
             } else {
-                // Handle failure
+                Toast.makeText(getActivity(), "Error 1ATF", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -142,46 +148,66 @@ public class ToDoFragment extends Fragment {
     }
 
     private void moveTaskToCompleted(String task) {
-        tasksRef.whereEqualTo("name", task).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful() && task.getResult() != null) {
-                    for (DocumentSnapshot document : task.getResult()) {
-                        String taskId = document.getId();
-                        completedRef.document(taskId).set(document.getData()).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
-                            @Override
-                            public void onComplete(@NonNull Task<DocumentReference> task) {
-                                if (task.isSuccessful()) {
-                                    document.getReference().delete();
-                                    tasks.remove(task);
-                                    adapter.notifyDataSetChanged();
-                                    updateInfoVisibility();
-                                } else {
-                                    // Handle error
-                                }
-                            }
-                        });
-                    }
-                } else {
-                    // Handle error
+        tasksRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
+            if (task1.isSuccessful() && task1.getResult() != null) {
+                for (DocumentSnapshot document : task1.getResult()) {
+                    String taskId = document.getId();
+                    completedRef.document(taskId).set(document.getData()).addOnCompleteListener(task2 -> {
+                        if (task2.isSuccessful()) {
+                            document.getReference().delete();
+                            tasks.remove(task);
+                            adapter.notifyDataSetChanged();
+                            updateInfoVisibility();
+                        } else {
+                            Toast.makeText(getActivity(), "Error 1ATC", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
+            } else {
+                Toast.makeText(getActivity(), "Error 1RFT", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showDeleteTaskDialog(String task) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Delete Task");
+        builder.setMessage("Are you sure you want to delete this task?");
+        builder.setPositiveButton("Yes", (dialog, which) -> deleteTaskFromFirestore(task));
+        builder.setNegativeButton("No", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void deleteTaskFromFirestore(String task) {
+        tasksRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
+            if (task1.isSuccessful() && task1.getResult() != null) {
+                for (DocumentSnapshot document : task1.getResult()) {
+                    document.getReference().delete().addOnCompleteListener(task2 -> {
+                        if (task2.isSuccessful()) {
+                            tasks.remove(task);
+                            adapter.notifyDataSetChanged();
+                            updateInfoVisibility();
+                        } else {
+                            Toast.makeText(getActivity(), "Error 1DTT", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            } else {
+                Toast.makeText(getActivity(), "Error 1GFT", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
     private void fetchTasksFromFirestore() {
-        tasksRef.get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (DocumentSnapshot document : task.getResult()) {
-                        tasks.add(document.getString("name"));
-                    }
-                    adapter.notifyDataSetChanged();
-                    updateInfoVisibility();
-                } else {
-                    // Handle error
+        tasksRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (DocumentSnapshot document : task.getResult()) {
+                    tasks.add(document.getString("task"));
                 }
+                adapter.notifyDataSetChanged();
+                updateInfoVisibility();
+            } else {
+                Toast.makeText(getActivity(), "Error 1FTF", Toast.LENGTH_SHORT).show();
             }
         });
     }

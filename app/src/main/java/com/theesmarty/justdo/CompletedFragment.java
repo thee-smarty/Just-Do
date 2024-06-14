@@ -9,20 +9,17 @@ import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 
@@ -41,16 +38,14 @@ public class CompletedFragment extends Fragment {
         super.onCreate(savedInstanceState);
         completedTasks = new ArrayList<>();
         firestoreFirebase = FirebaseFirestore.getInstance();
-
-        // Get current user ID
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             userId = user.getUid();
-            completedRef = firestoreFirebase.collection("Just Do").document(userId).collection("completed");
-            tasksRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks");
+            completedRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-completed");
+            tasksRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-todo");
             fetchCompletedTasksFromFirestore();
         } else {
-            // Handle user not logged in
+            Toast.makeText(getActivity(), "User Error", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -59,18 +54,25 @@ public class CompletedFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_completed, container, false);
 
-        ListView listView = view.findViewById(R.id.completed_list);
-        infoView = view.findViewById(R.id.completed_info);
+        ListView listView = view.findViewById(R.id.list);
+        infoView = view.findViewById(R.id.info);
 
-        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_checked, completedTasks);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_multiple_choice, completedTasks);
         listView.setAdapter(adapter);
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
 
         listView.setOnItemClickListener((parent, view1, position, id) -> {
-            CheckBox checkBox = (CheckBox) view1;
-            if (!checkBox.isChecked()) {
+            CheckBox checkBox = (CheckBox) view1.findViewById(android.R.id.checkbox);
+            if (checkBox != null && !checkBox.isChecked()) {
                 String task = completedTasks.get(position);
                 moveTaskToPending(task);
             }
+        });
+
+        listView.setOnItemLongClickListener((parent, view1, position, id) -> {
+            String task = completedTasks.get(position);
+            showDeleteTaskDialog(task);
+            return true;
         });
 
         updateInfoVisibility();
@@ -87,23 +89,51 @@ public class CompletedFragment extends Fragment {
     }
 
     private void moveTaskToPending(String task) {
-        completedRef.whereEqualTo("name", task).get().addOnCompleteListener(task1 -> {
+        completedRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
             if (task1.isSuccessful() && task1.getResult() != null) {
                 for (DocumentSnapshot document : task1.getResult()) {
-                    TaskModel taskModel = document.toObject(TaskModel.class);
-                    tasksRef.add(taskModel).addOnCompleteListener(task2 -> {
+                    tasksRef.document(document.getId()).set(document.getData()).addOnCompleteListener(task2 -> {
                         if (task2.isSuccessful()) {
                             document.getReference().delete();
-                            completedTasks.remove(taskModel.getName());
+                            completedTasks.remove(task);
                             adapter.notifyDataSetChanged();
                             updateInfoVisibility();
                         } else {
-                            // Handle error
+                            Toast.makeText(getActivity(), "Error 1ATT", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
             } else {
-                // Handle error
+                Toast.makeText(getActivity(), "Error 1RTC", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showDeleteTaskDialog(String task) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Delete Task");
+        builder.setMessage("Are you sure you want to delete this task?");
+        builder.setPositiveButton("Yes", (dialog, which) -> deleteTaskFromFirestore(task));
+        builder.setNegativeButton("No", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void deleteTaskFromFirestore(String task) {
+        completedRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
+            if (task1.isSuccessful() && task1.getResult() != null) {
+                for (DocumentSnapshot document : task1.getResult()) {
+                    document.getReference().delete().addOnCompleteListener(task2 -> {
+                        if (task2.isSuccessful()) {
+                            completedTasks.remove(task);
+                            adapter.notifyDataSetChanged();
+                            updateInfoVisibility();
+                        } else {
+                            Toast.makeText(getActivity(), "Error 1DTC", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            } else {
+                Toast.makeText(getActivity(), "Error 1GFC", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -112,34 +142,13 @@ public class CompletedFragment extends Fragment {
         completedRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
-                    TaskModel taskModel = document.toObject(TaskModel.class);
-                    completedTasks.add(taskModel.getName());
+                    completedTasks.add(document.getString("task"));
                 }
                 adapter.notifyDataSetChanged();
                 updateInfoVisibility();
             } else {
-                // Handle error
+                Toast.makeText(getActivity(), "Error 1FTF", Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private static class TaskModel {
-        private String name;
-
-        public TaskModel() {
-            // Default constructor required for calls to DataSnapshot.getValue(TaskModel.class)
-        }
-
-        public TaskModel(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
     }
 }
