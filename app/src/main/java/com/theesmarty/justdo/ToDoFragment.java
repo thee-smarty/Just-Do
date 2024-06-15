@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public class ToDoFragment extends Fragment {
 
@@ -64,27 +65,33 @@ public class ToDoFragment extends Fragment {
         Button addButton = view.findViewById(R.id.add);
         infoView = view.findViewById(R.id.info);
 
-        adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, tasks) {
+        adapter = new ArrayAdapter<String>(getContext(), R.layout.list_item, R.id.textView, tasks) {
             @NonNull
             @Override
             public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                View itemView = super.getView(position, convertView, parent);
+                if (convertView == null) {
+                    LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
+                    convertView = inflater.inflate(R.layout.list_item, parent, false);
+                }
 
-                CheckBox checkBox = itemView.findViewById(R.id.checkBox);
+                CheckBox checkBox = convertView.findViewById(R.id.checkBox);
+                TextView textView = convertView.findViewById(R.id.textView);
+
+                String task = getItem(position);
+                textView.setText(task);
+
                 checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
                     if (isChecked) {
-                        String task = tasks.get(position);
                         moveTaskToCompleted(task);
                     }
                 });
 
-                itemView.setOnLongClickListener(v -> {
-                    String task = tasks.get(position);
+                convertView.setOnLongClickListener(v -> {
                     showDeleteTaskDialog(task);
                     return true;
                 });
 
-                return itemView;
+                return convertView;
             }
         };
 
@@ -152,7 +159,7 @@ public class ToDoFragment extends Fragment {
             if (task1.isSuccessful() && task1.getResult() != null) {
                 for (DocumentSnapshot document : task1.getResult()) {
                     String taskId = document.getId();
-                    completedRef.document(taskId).set(document.getData()).addOnCompleteListener(task2 -> {
+                    completedRef.document(taskId).set(Objects.requireNonNull(document.getData())).addOnCompleteListener(task2 -> {
                         if (task2.isSuccessful()) {
                             document.getReference().delete();
                             tasks.remove(task);
@@ -202,7 +209,12 @@ public class ToDoFragment extends Fragment {
         tasksRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
-                    tasks.add(document.getString("task"));
+                    String taskName = document.getString("task");
+                    if (taskName != null) {
+                        tasks.add(taskName);
+                    } else {
+                        Toast.makeText(getActivity(), "Error: task name is null", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 adapter.notifyDataSetChanged();
                 updateInfoVisibility();
