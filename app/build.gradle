@@ -5,20 +5,22 @@ plugins {
 
 android {
     namespace 'com.theesmarty.justdo'
-    compileSdk 34
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.theesmarty.justdo"
         minSdk 24
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
+            debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -30,9 +32,9 @@ android {
 }
 
 dependencies {
-
+    implementation 'androidx.appcompat:appcompat-resources:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -40,6 +42,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:23.0.0'
     implementation 'com.google.firebase:firebase-firestore:25.0.0'
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
-    implementation 'com.google.android.gms:play-services-auth:21.1.1'
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.android.support:multidex:2.0.1'
 }
