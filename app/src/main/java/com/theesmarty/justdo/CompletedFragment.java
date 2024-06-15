@@ -22,25 +22,24 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class CompletedFragment extends Fragment {
 
     private ArrayList<String> completedTasks;
     private ArrayAdapter<String> adapter;
-    private FirebaseFirestore firestoreFirebase;
     private CollectionReference completedRef;
     private CollectionReference tasksRef;
-    private String userId;
     private TextView infoView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         completedTasks = new ArrayList<>();
-        firestoreFirebase = FirebaseFirestore.getInstance();
+        FirebaseFirestore firestoreFirebase = FirebaseFirestore.getInstance();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            userId = user.getUid();
+            String userId = user.getUid();
             completedRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-completed");
             tasksRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-todo");
             fetchCompletedTasksFromFirestore();
@@ -57,17 +56,27 @@ public class CompletedFragment extends Fragment {
         ListView listView = view.findViewById(R.id.list);
         infoView = view.findViewById(R.id.info);
 
-        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_multiple_choice, completedTasks);
-        listView.setAdapter(adapter);
-        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        adapter = new ArrayAdapter<String>(getContext(), R.layout.list_item, R.id.textView, completedTasks) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View itemView = super.getView(position, convertView, parent);
 
-        listView.setOnItemClickListener((parent, view1, position, id) -> {
-            CheckBox checkBox = (CheckBox) view1.findViewById(android.R.id.checkbox);
-            if (checkBox != null && !checkBox.isChecked()) {
-                String task = completedTasks.get(position);
-                moveTaskToPending(task);
+                CheckBox checkBox = itemView.findViewById(R.id.checkBox);
+                checkBox.setChecked(true);
+
+                checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                    if (!isChecked) {
+                        String task = completedTasks.get(position);
+                        moveTaskToPending(task);
+                    }
+                });
+
+                return itemView;
             }
-        });
+        };
+
+        listView.setAdapter(adapter);
 
         listView.setOnItemLongClickListener((parent, view1, position, id) -> {
             String task = completedTasks.get(position);
@@ -92,7 +101,7 @@ public class CompletedFragment extends Fragment {
         completedRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
             if (task1.isSuccessful() && task1.getResult() != null) {
                 for (DocumentSnapshot document : task1.getResult()) {
-                    tasksRef.document(document.getId()).set(document.getData()).addOnCompleteListener(task2 -> {
+                    tasksRef.document(document.getId()).set(Objects.requireNonNull(document.getData())).addOnCompleteListener(task2 -> {
                         if (task2.isSuccessful()) {
                             document.getReference().delete();
                             completedTasks.remove(task);
@@ -142,7 +151,12 @@ public class CompletedFragment extends Fragment {
         completedRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 for (DocumentSnapshot document : task.getResult()) {
-                    completedTasks.add(document.getString("task"));
+                    String taskName = document.getString("task");
+                    if (taskName != null) {
+                        completedTasks.add(taskName);
+                    } else {
+                        Toast.makeText(getActivity(), "Firestore Error\", \"Task name is null for document:", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 adapter.notifyDataSetChanged();
                 updateInfoVisibility();
