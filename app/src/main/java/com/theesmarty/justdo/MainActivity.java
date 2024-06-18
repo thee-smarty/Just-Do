@@ -1,15 +1,13 @@
 package com.theesmarty.justdo;
 
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.FrameLayout;
-import android.widget.TableLayout;
-import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -27,16 +25,27 @@ public class MainActivity extends AppCompatActivity {
 
     private FirebaseAuth firebaseAuth;
     private GoogleSignInClient googleSignInClient;
-    private FrameLayout frameLayout;
-    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        TabLayout tabLayout = (TabLayout) findViewById(R.id.tabLayout);
 
-        frameLayout = (FrameLayout) findViewById(R.id.frameLayout);
-        tabLayout = (TabLayout) findViewById(R.id.tabLayout);
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("829993235030-pje34ns3bisg3e0ubqb0l04anmilr8ul.apps.googleusercontent.com")
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user == null) {
+            signIn();
+        } else {
+            Toast.makeText(getApplicationContext(), "Login Success!\nWelcome " + user.getDisplayName(), Toast.LENGTH_SHORT).show();
+        }
 
         getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new ToDoFragment()).addToBackStack(null).commit();
         tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -59,21 +68,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
-
-        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken("829993235030-j3negle747muq1jcc40rpn8of65bt9vv.apps.googleusercontent.com")
-                .requestEmail()
-                .build();
-
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
-        firebaseAuth = FirebaseAuth.getInstance();
-
-        FirebaseUser user = firebaseAuth.getCurrentUser();
-        if (user == null) {
-            signIn();
-        } else {
-            Toast.makeText(getApplicationContext(), "Login Success!\nWelcome " + user.getDisplayName(), Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
