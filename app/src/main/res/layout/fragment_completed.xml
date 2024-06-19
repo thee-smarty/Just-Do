@@ -12,14 +12,13 @@
         android:layout_height="match_parent"
         android:text="There is nothing to see here. Complete a Task."
         android:gravity="center"
-        android:visibility="visible"/>
+        android:visibility="invisible"/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/list"
         android:padding="5dp"
-        android:visibility="invisible"/>
-
+        android:visibility="visible"/>
 
 </RelativeLayout>
