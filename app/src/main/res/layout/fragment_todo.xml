@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
+    android:paddingTop="15dp"
     tools:context=".ToDoFragment">
 
     <TextView
@@ -12,20 +13,21 @@
         android:layout_height="match_parent"
         android:text="There is nothing to see here. Add a task."
         android:gravity="center"
-        android:visibility="visible"
+        android:visibility="invisible"
         android:layout_above="@id/add"/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/list"
-        android:visibility="invisible"
+        android:visibility="visible"
         android:layout_above="@id/add"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/black"
+        android:textColor="@color/white"
         android:id="@+id/add"
         android:text="+ Add"
         android:layout_alignParentBottom="true"
