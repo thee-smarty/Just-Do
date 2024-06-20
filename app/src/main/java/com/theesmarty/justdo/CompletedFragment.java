@@ -1,5 +1,8 @@
 package com.theesmarty.justdo;
 
+// TODO: 6/16/24 Add more responsiveness when user performs an action then it has to update the whole fragment
+
+
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -31,6 +34,7 @@ public class CompletedFragment extends Fragment {
     private CollectionReference completedRef;
     private CollectionReference tasksRef;
     private TextView infoView;
+    private ListView listView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,8 +56,7 @@ public class CompletedFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_completed, container, false);
-
-        ListView listView = view.findViewById(R.id.list);
+        listView = view.findViewById(R.id.list);
         infoView = view.findViewById(R.id.info);
 
         adapter = new ArrayAdapter<String>(getContext(), R.layout.list_item, R.id.textView, completedTasks) {
