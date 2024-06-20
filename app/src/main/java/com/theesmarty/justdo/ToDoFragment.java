@@ -1,5 +1,7 @@
 package com.theesmarty.justdo;
 
+// TODO: 6/16/24 Add more responsiveness when user performs an action then it has to update the whole fragment 
+
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -38,6 +40,7 @@ public class ToDoFragment extends Fragment {
     private CollectionReference tasksRef;
     private CollectionReference completedRef;
     private TextView infoView;
+    private ListView listView;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,8 +63,7 @@ public class ToDoFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_todo, container, false);
-
-        ListView listView = view.findViewById(R.id.list);
+        listView = view.findViewById(R.id.list);
         Button addButton = view.findViewById(R.id.add);
         infoView = view.findViewById(R.id.info);
 
