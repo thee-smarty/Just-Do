@@ -1,6 +1,5 @@
 package com.theesmarty.justdo;
 
-// TODO: 6/16/24 Add more responsiveness when user performs an action then it has to update the whole fragment
 
 
 import android.app.AlertDialog;

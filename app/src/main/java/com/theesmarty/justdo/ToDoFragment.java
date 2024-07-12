@@ -1,6 +1,5 @@
 package com.theesmarty.justdo;
 
-// TODO: 6/16/24 Add more responsiveness when user performs an action then it has to update the whole fragment 
 
 import android.app.AlertDialog;
 import android.os.Bundle;
@@ -145,11 +144,13 @@ public class ToDoFragment extends Fragment {
                 tasks.add(task);
                 adapter.notifyDataSetChanged();
                 updateInfoVisibility();
+                Toast.makeText(getActivity(), "Task added successfully", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(getActivity(), "Error 1ATF", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Error 1ATF: " + task1.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
+
 
     private String generateUniqueId() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss", Locale.getDefault());
