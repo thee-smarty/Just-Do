@@ -60,7 +60,13 @@ public class MainActivity extends AppCompatActivity {
                         fragment = new CompletedFragment();
                         break;
                 }
-                getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, fragment).setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN).commit();
+                if (fragment != null) {
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.frameLayout, fragment)
+                            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                            .addToBackStack(null)
+                            .commit();
+                }
             }
 
             @Override
@@ -68,6 +74,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTabReselected(TabLayout.Tab tab) {}
         });
+    }
+    @Override
+    public void onBackPressed() {
+            super.onBackPressed();
+            finish();
     }
 
     @Override

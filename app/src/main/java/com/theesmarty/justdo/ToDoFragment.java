@@ -171,8 +171,6 @@ public class ToDoFragment extends Fragment {
         }
     }
 
-    // TODO: 7/12/24 Have to continue from here
-
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Add Task");
