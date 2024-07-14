@@ -19,6 +19,6 @@
         android:layout_height="match_parent"
         android:id="@+id/list"
         android:padding="5dp"
-        android:visibility="visible"/>
+        android:visibility="invisible"/>
 
 </RelativeLayout>

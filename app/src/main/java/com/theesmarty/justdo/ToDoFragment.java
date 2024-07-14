@@ -2,7 +2,9 @@ package com.theesmarty.justdo;
 
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,6 +13,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,97 +24,154 @@ import androidx.fragment.app.Fragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
 public class ToDoFragment extends Fragment {
 
-    private ArrayList<String> tasks;
-    private ArrayAdapter<String> adapter;
-    private CollectionReference tasksRef;
-    private CollectionReference completedRef;
-    private TextView infoView;
-    private ListView listView;
+    private FirebaseAuth firebaseAuth;
+    private FirebaseFirestore firestore;
+    private ArrayAdapter<String> taskAdapter;
+    private List<String> taskList;
+    private List<String> taskIds;
+    Button add;
+    ListView list;
+    TextView info;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        tasks = new ArrayList<>();
-        FirebaseFirestore firestoreFirebase = FirebaseFirestore.getInstance();
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user != null) {
-            String userId = user.getUid();
-            tasksRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-todo");
-            completedRef = firestoreFirebase.collection("Just Do").document(userId).collection("tasks-completed");
-            fetchTasksFromFirestore();
-        } else {
-            Toast.makeText(getActivity(), "User Error", Toast.LENGTH_SHORT).show();
-        }
     }
+
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView (@NonNull LayoutInflater inflater, @Nullable ViewGroup
+    container, @Nullable Bundle savedInstanceState){
         View view = inflater.inflate(R.layout.fragment_todo, container, false);
-        listView = view.findViewById(R.id.list);
-        Button addButton = view.findViewById(R.id.add);
-        infoView = view.findViewById(R.id.info);
 
-        adapter = new ArrayAdapter<String>(getContext(), R.layout.list_item, R.id.textView, tasks) {
-            @NonNull
-            @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-                if (convertView == null) {
-                    LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(getContext().LAYOUT_INFLATER_SERVICE);
-                    convertView = inflater.inflate(R.layout.list_item, parent, false);
+
+        add = view.findViewById(R.id.add);
+        list = view.findViewById(R.id.list);
+        info = view.findViewById(R.id.info);
+
+        taskList = new ArrayList<>();
+        taskIds = new ArrayList<>();
+
+        taskAdapter = new ArrayAdapter<String>(getContext(), R.layout.list_item, R.id.task, taskList){
+        @NonNull
+        @Override
+        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            if (convertView == null) {
+                convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_item, parent, false);
+            }
+
+            String task = getItem(position);
+
+            CheckBox taskCheckbox = convertView.findViewById(R.id.checkBox);
+            taskCheckbox.setChecked(false);
+            TextView taskText = convertView.findViewById(R.id.task);
+
+            taskText.setText(task);
+
+            taskCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    moveTaskToCompleted(position);
                 }
+            });
 
-                CheckBox checkBox = convertView.findViewById(R.id.checkBox);
-                TextView textView = convertView.findViewById(R.id.textView);
+            View finalConvertView = convertView;
+            convertView.setOnLongClickListener(v -> {
+                showPopup(finalConvertView,position);
+                return true;
+            });
 
-                String task = getItem(position);
-                textView.setText(task);
-
-                checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                    if (isChecked) {
-                        moveTaskToCompleted(task);
-                    }
-                });
-
-                convertView.setOnLongClickListener(v -> {
-                    showDeleteTaskDialog(task);
-                    return true;
-                });
-
-                return convertView;
+            return convertView;
             }
         };
 
-        listView.setAdapter(adapter);
+        list.setAdapter(taskAdapter);
 
-        addButton.setOnClickListener(v -> showAddTaskDialog());
+        firebaseAuth = FirebaseAuth.getInstance();
+        firestore = FirebaseFirestore.getInstance();
+        FirebaseUser user = firebaseAuth.getCurrentUser();
 
-        updateInfoVisibility();
+        if(user!=null){
+            loadTasks(user.getUid());
+        }
+
+        add.setOnClickListener(v -> showAddTaskDialog());
+
+
 
         return view;
     }
 
-    private void updateInfoVisibility() {
-        if (tasks.isEmpty()) {
-            infoView.setVisibility(View.VISIBLE);
-        } else {
-            infoView.setVisibility(View.GONE);
+    private void moveTaskToCompleted(int position) {
+        String taskId = taskIds.get(position);
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            DocumentReference taskRef = firestore.collection("JustDo").document(userId).collection("tasks-todo").document(taskId);
+
+            taskRef.get().addOnSuccessListener(documentSnapshot -> {
+                if (documentSnapshot.exists()) {
+                    Map<String, Object> taskData = documentSnapshot.getData();
+                    if (taskData != null) {
+                        firestore.collection("JustDo").document(userId).collection("tasks-completed").document(taskId)
+                                .set(taskData)
+                                .addOnSuccessListener(aVoid -> {
+                                    taskRef.delete()
+                                            .addOnSuccessListener(aVoid1 -> {
+                                                Toast.makeText(getContext(), "Task moved to completed", Toast.LENGTH_SHORT).show();
+                                                loadTasks(userId);
+                                            })
+                                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete task: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                                })
+                                .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to move task: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                }
+            });
         }
     }
+
+
+    private void showPopup(View itemView, int position) {
+        PopupMenu popup = new PopupMenu(getContext(), itemView);
+        popup.getMenu().add("Delete").setOnMenuItemClickListener(item -> {
+            deleteTask(position);
+            return true;
+        });
+        popup.show();
+    }
+
+    private void deleteTask(int position) {
+        String taskId = taskIds.get(position);
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        if (user != null) {
+            String userId = user.getUid();
+            firestore.collection("JustDo").document(userId).collection("tasks-todo").document(taskId)
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(getContext(), "Success", Toast.LENGTH_SHORT).show();
+                        loadTasks(userId);
+                    })
+                    .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete note: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+        }
+    }
+
+    // TODO: 7/12/24 Have to continue from here
 
     private void showAddTaskDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
@@ -119,111 +179,75 @@ public class ToDoFragment extends Fragment {
 
         final EditText input = new EditText(getContext());
         input.setHint("Enter task here");
+        input.setSingleLine(true);
+        input.setMaxLines(1);
         builder.setView(input);
 
         builder.setPositiveButton("Add", (dialog, which) -> {
             String task = input.getText().toString().trim();
             if (!task.isEmpty()) {
-                addTaskToFirestore(task);
+                addTask(task);
             }
         });
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
         builder.show();
     }
 
-    private void addTaskToFirestore(String task) {
-        String taskId = generateUniqueId();
-        Map<String, Object> taskData = new HashMap<>();
-        taskData.put("id", taskId);
-        taskData.put("task", task);
-
-        tasksRef.document(taskId).set(taskData).addOnCompleteListener(task1 -> {
-            if (task1.isSuccessful()) {
-                tasks.add(task);
-                adapter.notifyDataSetChanged();
-                updateInfoVisibility();
-                Toast.makeText(getActivity(), "Task added successfully", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getActivity(), "Error 1ATF: " + task1.getException().getMessage(), Toast.LENGTH_SHORT).show();
+    private void addTask(String addTask) {
+        FirebaseUser user = firebaseAuth.getCurrentUser();
+        String taskId = new SimpleDateFormat("ddMMyyHHmmss", Locale.getDefault()).format(new Date());
+        if (user != null) {
+            String userId = user.getUid();
+            DocumentReference taskRef = firestore.collection("JustDo").document(userId).collection("tasks-todo").document(taskId);
+            if(TextUtils.isEmpty(addTask)){
+                Toast.makeText(getActivity(), "No task.", Toast.LENGTH_SHORT).show();
             }
-        });
-    }
-
-
-    private String generateUniqueId() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmmss", Locale.getDefault());
-        return sdf.format(new Date());
-    }
-
-    private void moveTaskToCompleted(String task) {
-        tasksRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
-            if (task1.isSuccessful() && task1.getResult() != null) {
-                for (DocumentSnapshot document : task1.getResult()) {
-                    String taskId = document.getId();
-                    completedRef.document(taskId).set(Objects.requireNonNull(document.getData())).addOnCompleteListener(task2 -> {
-                        if (task2.isSuccessful()) {
-                            document.getReference().delete();
-                            tasks.remove(task);
-                            adapter.notifyDataSetChanged();
-                            updateInfoVisibility();
-                        } else {
-                            Toast.makeText(getActivity(), "Error 1ATC", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            } else {
-                Toast.makeText(getActivity(), "Error 1RFT", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void showDeleteTaskDialog(String task) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Delete Task");
-        builder.setMessage("Are you sure you want to delete this task?");
-        builder.setPositiveButton("Yes", (dialog, which) -> deleteTaskFromFirestore(task));
-        builder.setNegativeButton("No", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    private void deleteTaskFromFirestore(String task) {
-        tasksRef.whereEqualTo("task", task).get().addOnCompleteListener(task1 -> {
-            if (task1.isSuccessful() && task1.getResult() != null) {
-                for (DocumentSnapshot document : task1.getResult()) {
-                    document.getReference().delete().addOnCompleteListener(task2 -> {
-                        if (task2.isSuccessful()) {
-                            tasks.remove(task);
-                            adapter.notifyDataSetChanged();
-                            updateInfoVisibility();
-                        } else {
-                            Toast.makeText(getActivity(), "Error 1DTT", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
-            } else {
-                Toast.makeText(getActivity(), "Error 1GFT", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void fetchTasksFromFirestore() {
-        tasksRef.get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                for (DocumentSnapshot document : task.getResult()) {
-                    String taskName = document.getString("task");
-                    if (taskName != null) {
-                        tasks.add(taskName);
+            else{
+                Map<String, Object> taskMap = new HashMap<>();
+                taskMap.put("task", addTask);
+                taskMap.put("taskId", taskId);
+                taskRef.set(taskMap).addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(getActivity(), "Task Added.", Toast.LENGTH_SHORT).show();
+                        loadTasks(userId);
                     } else {
-                        Toast.makeText(getActivity(), "Error: task name is null", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(), "Failed to add Tasks."+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
                     }
-                }
-                adapter.notifyDataSetChanged();
-                updateInfoVisibility();
-            } else {
-                Toast.makeText(getActivity(), "Error 1FTF", Toast.LENGTH_SHORT).show();
+                });
             }
-        });
+        }else {
+            Toast.makeText(getActivity(), "User not authenticated.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private void loadTasks(String userId) {
+        firestore.collection("JustDo").document(userId).collection("tasks-todo")
+                .get()
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        taskList.clear();
+                        taskIds.clear();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            String taskName = document.getString("task");
+                            String taskId = document.getId();
+                            taskList.add(taskName);
+                            taskIds.add(taskId);
+                        }
+                        taskAdapter.notifyDataSetChanged();
+
+                        if (taskList.size() > 0) {
+                            list.setVisibility(ListView.VISIBLE);
+                            info.setVisibility(TextView.INVISIBLE);
+                        } else {
+                            info.setVisibility(TextView.VISIBLE);
+                            list.setVisibility(ListView.INVISIBLE);
+                        }
+                    } else {
+                        Toast.makeText(getActivity(), "Failed to load Tasks."+task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

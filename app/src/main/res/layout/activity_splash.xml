@@ -14,21 +14,13 @@
         android:layout_above="@+id/dev"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Just Do"
-            android:textSize="35dp"
-            android:textColor="@color/black"
-            android:gravity="center"/>
-
         <ImageView
             android:id="@+id/logo"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
             android:layout_alignTop="@+id/appname"
             android:layout_centerHorizontal="true"
-            android:src="@drawable/baseline_task_alt_24" />
+            android:src="@drawable/ic_launcher_inverted" />
 
     </LinearLayout>
 
