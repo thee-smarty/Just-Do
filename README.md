@@ -1,9 +1,23 @@
-# Just Do
+# [Just Do](https://play.google.com/store/apps/details?id=com.theesmarty.do)
 
 Welcome to the Just Do Repository! 
 
 ## Features
 
+### Authentication
+Securely log in with your Google account, allowing you to access your tasks across multiple devices.
+
+### Task Management
+Easily create, edit, and delete tasks to keep your day organized and productive.
+
+### Track your tasks
+Simply you can check the tasks you need to do and what you already done
+
+### Sync Across Devices
+Your tasks are synced across all your devices when you sign in, ensuring that you always have your latest task list with you.
+
+### User-Friendly UI
+Clean and minimalistic interface for a distraction-free experience.
 
 
 ## Technology Stack
