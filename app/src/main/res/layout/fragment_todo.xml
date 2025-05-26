@@ -3,15 +3,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
-    android:paddingTop="15dp"
+    android:background="@color/background"
+    android:paddingTop="5dp"
     tools:context=".ToDoFragment">
 
     <TextView
         android:id="@+id/info"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="There is nothing to see here. Add a task."
+        android:text="@string/todo_null"
+        android:textColor="@color/white"
         android:gravity="center"
         android:visibility="invisible"
         android:layout_above="@id/add"/>
@@ -21,15 +22,18 @@
         android:layout_height="match_parent"
         android:id="@+id/list"
         android:visibility="invisible"
+        android:divider="@null"
         android:layout_above="@id/add"/>
 
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/black"
-        android:textColor="@color/white"
+        android:backgroundTint="@color/gold"
+        android:textColor="@color/black"
         android:id="@+id/add"
         android:text="+ Add"
+        android:textStyle="bold"
+        android:textSize="16sp"
         android:layout_alignParentBottom="true"
         />
 

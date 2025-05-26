@@ -3,6 +3,7 @@ package com.theesmarty.justdo;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -172,24 +173,39 @@ public class ToDoFragment extends Fragment {
     }
 
     private void showAddTaskDialog() {
+        // Inflate custom layout
+        View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.alertbox, null);
+
+        // Create AlertDialog
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Add Task");
+        builder.setView(dialogView);
 
-        final EditText input = new EditText(getContext());
-        input.setHint("Enter task here");
-        input.setSingleLine(true);
-        input.setMaxLines(1);
-        builder.setView(input);
+        // Get references to views
+        EditText input = dialogView.findViewById(R.id.task);
+        Button addButton = dialogView.findViewById(R.id.dialog_add_button);
+        Button cancelButton = dialogView.findViewById(R.id.dialog_cancel_button);
 
-        builder.setPositiveButton("Add", (dialog, which) -> {
+        // Handle Add button
+        addButton.setOnClickListener(v -> {
             String task = input.getText().toString().trim();
             if (!task.isEmpty()) {
                 addTask(task);
+                ((AlertDialog) v.getTag()).dismiss(); // Dismiss dialog
+            } else {
+                input.setError("Please enter a task");
             }
         });
 
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
+        // Handle Cancel button
+        cancelButton.setOnClickListener(v -> ((AlertDialog) v.getTag()).dismiss());
+
+        // Show dialog
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Set dialog as tag for buttons to allow dismissal
+        addButton.setTag(dialog);
+        cancelButton.setTag(dialog);
     }
 
     private void addTask(String addTask) {
