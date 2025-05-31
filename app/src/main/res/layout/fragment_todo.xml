@@ -14,27 +14,28 @@
         android:text="@string/todo_null"
         android:textColor="@color/white"
         android:gravity="center"
-        android:visibility="invisible"
-        android:layout_above="@id/add"/>
+        android:visibility="invisible"/>
 
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/list"
         android:visibility="invisible"
-        android:divider="@null"
-        android:layout_above="@id/add"/>
+        android:divider="@null"/>
 
     <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/gold"
-        android:textColor="@color/black"
         android:id="@+id/add"
-        android:text="+ Add"
-        android:textStyle="bold"
-        android:textSize="16sp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        />
+        android:layout_marginBottom="26dp"
+        android:layout_marginEnd="26dp"
+        android:tooltipText="@string/add_task"
+        android:backgroundTint="@color/gold"
+        android:gravity="center_horizontal"
+        android:text="@string/plus"
+        android:textColor="@color/black"
+        android:textSize="34sp" />
 
 </RelativeLayout>

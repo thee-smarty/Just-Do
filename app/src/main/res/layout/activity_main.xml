@@ -8,17 +8,25 @@
     android:background="@color/background"
     tools:context=".MainActivity">
 
-    <TextView
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:text="Just Do"
-        android:gravity="center"
-        android:textSize="35dp"
-        android:background="@color/foreground"
-        android:textColor="@color/white"
-        android:textStyle="bold"
+        android:layout_height="wrap_content"
+        android:paddingVertical="10dp">
 
-        />
+        <ImageView
+            android:layout_alignParentStart="true"
+            android:layout_width="wrap_content"
+            android:contentDescription="@string/app_name"
+            android:tooltipText="@string/app_name"
+            android:layout_height="28dp"
+            android:src="@drawable/justdo_title"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+    </RelativeLayout>
+
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
@@ -33,13 +41,13 @@
             android:id="@+id/tab1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="To Do"
+            android:text="@string/tab_todo"
             />
         <com.google.android.material.tabs.TabItem
             android:id="@+id/tab2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Completed"
+            android:text="@string/tab_completed"
             />
 
     </com.google.android.material.tabs.TabLayout>

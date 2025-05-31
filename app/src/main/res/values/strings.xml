@@ -1,10 +1,26 @@
 <resources>
+    <!-- application  -->
     <string name="app_name">Just Do</string>
-    <!-- TODO: Remove or change this placeholder text -->
+    <string name="api">829993235030-j3negle747muq1jcc40rpn8of65bt9vv.apps.googleusercontent.com</string>
+
+    <!-- activity_main.xml -->
+    <string name="tab_todo">To Do</string>
+    <string name="tab_completed">Completed</string>
+
+    <!-- fragment_todo.xml -->
     <string name="todo_null">There is nothing to see here. Add a task.</string>
+    <string name="plus">+</string>
+
+    <!-- fragment_completed.xml -->
     <string name="completed_null">There is nothing to see here. Complete a Task.</string>
+
+    <!-- alertbox.xml -->
     <string name="add_task">Add Task</string>
+    <string name="task_info">Task Info</string>
     <string name="alert_addBtn">Add</string>
     <string name="alert_cancelBtn">Cancel</string>
-    <string name="task_info">Task Info</string>
+
+    <!-- list_item.xml -->
+    <string name="tt_completed">Completed?</string>
+
 </resources>
