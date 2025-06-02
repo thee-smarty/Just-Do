@@ -3,6 +3,10 @@
     <string name="app_name">Just Do</string>
     <string name="api">829993235030-j3negle747muq1jcc40rpn8of65bt9vv.apps.googleusercontent.com</string>
 
+    <!-- splash_activity.xml -->
+    <string name="dev_text">Developed by </string>
+    <string name="dev_name">thee_smarty</string>
+
     <!-- activity_main.xml -->
     <string name="tab_todo">To Do</string>
     <string name="tab_completed">Completed</string>

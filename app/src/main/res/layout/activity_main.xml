@@ -5,7 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background"
     tools:context=".MainActivity">
 
     <RelativeLayout
@@ -19,18 +18,14 @@
             android:contentDescription="@string/app_name"
             android:tooltipText="@string/app_name"
             android:layout_height="28dp"
-            android:src="@drawable/justdo_title"/>
-
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:src="@drawable/titlejd"
+            app:tint="?attr/icon"/>
 
     </RelativeLayout>
 
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabLayout"
-        android:background="@color/foreground"
         app:tabTextColor="@color/white"
         android:layout_width="match_parent"
         app:tabSelectedTextColor="@color/gold"

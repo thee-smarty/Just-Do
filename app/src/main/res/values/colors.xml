@@ -2,8 +2,10 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="background">#0e0e0e</color>
-    <color name="foreground">#242424</color>
+    <color name="dark_background">#0E0E0E</color>
+    <color name="light_background">#F1F1F1</color>
+    <color name="light_foreground">#CFCFCF</color>
+    <color name="dark_foreground">#242424</color>
     <color name="card">#1d1d1d</color>
-    <color name="gold">#FFDC64</color>
+    <color name="gold">#FFD54F</color>
 </resources>
