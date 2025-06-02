@@ -26,5 +26,6 @@
 
     <!-- list_item.xml -->
     <string name="tt_completed">Completed?</string>
+    <string name="settings">settings</string>
 
 </resources>
