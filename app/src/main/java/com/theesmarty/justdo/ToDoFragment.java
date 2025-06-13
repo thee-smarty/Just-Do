@@ -2,8 +2,6 @@ package com.theesmarty.justdo;
 
 
 import android.app.AlertDialog;
-import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -24,9 +22,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -37,7 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 
 public class ToDoFragment extends Fragment {
 
@@ -132,14 +127,12 @@ public class ToDoFragment extends Fragment {
                     if (taskData != null) {
                         firestore.collection("JustDo").document(userId).collection("tasks-completed").document(taskId)
                                 .set(taskData)
-                                .addOnSuccessListener(aVoid -> {
-                                    taskRef.delete()
-                                            .addOnSuccessListener(aVoid1 -> {
-                                                Toast.makeText(getContext(), "Task moved to completed", Toast.LENGTH_SHORT).show();
-                                                loadTasks(userId);
-                                            })
-                                            .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete task: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                                })
+                                .addOnSuccessListener(aVoid -> taskRef.delete()
+                                        .addOnSuccessListener(aVoid1 -> {
+                                            Toast.makeText(getContext(), "Task moved to completed", Toast.LENGTH_SHORT).show();
+                                            loadTasks(userId);
+                                        })
+                                        .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to delete task: " + e.getMessage(), Toast.LENGTH_SHORT).show()))
                                 .addOnFailureListener(e -> Toast.makeText(getContext(), "Failed to move task: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     }
                 }
@@ -243,7 +236,6 @@ public class ToDoFragment extends Fragment {
                     if (task.isSuccessful()) {
                         taskList.clear();
                         taskIds.clear();
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String taskName = document.getString("task");
                             String taskId = document.getId();

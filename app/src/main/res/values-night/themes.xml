@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Base.Theme.JustDo" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/gold</item>
+        <item name="colorOnPrimary">@color/gold</item>
         <item name="colorOnBackground">@color/dark_background</item>
         <item name="colorOnSurface">@color/dark_foreground</item>
         <item name="icon">@color/white</item>
